@@ -1,0 +1,113 @@
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Verify secrets present
+        env:
+          ENV_LOCAL: ${{ secrets.ENV_LOCAL }}
+          EXPERIENCE_JSON: ${{ secrets.EXPERIENCE_JSON }}
+          ACHIEVEMENTS_JSON: ${{ secrets.ACHIEVEMENTS_JSON }}
+          CP_PROFILE_JSON: ${{ secrets.CP_PROFILE_JSON }}
+          PROJECTS_JSON: ${{ secrets.PROJECTS_JSON }}
+          SECTIONS_JSON: ${{ secrets.SECTIONS_JSON }}
+        run: |
+          missing=0
+          for v in ENV_LOCAL EXPERIENCE_JSON ACHIEVEMENTS_JSON CP_PROFILE_JSON PROJECTS_JSON SECTIONS_JSON; do
+            if [ -z "${!v}" ]; then
+              echo "::error title=Missing secret::repo secret '$v' is unset or empty — set it under Settings → Secrets and variables → Actions"
+              missing=1
+            fi
+          done
+          [ "$missing" = "0" ] || exit 1
+
+      - name: Create env file
+        env:
+          ENV_LOCAL: ${{ secrets.ENV_LOCAL }}
+        run: printf '%s\n' "$ENV_LOCAL" > .env.local
+
+      - name: Create data files
+        env:
+          EXPERIENCE_JSON: ${{ secrets.EXPERIENCE_JSON }}
+          ACHIEVEMENTS_JSON: ${{ secrets.ACHIEVEMENTS_JSON }}
+          CP_PROFILE_JSON: ${{ secrets.CP_PROFILE_JSON }}
+          PROJECTS_JSON: ${{ secrets.PROJECTS_JSON }}
+          SECTIONS_JSON: ${{ secrets.SECTIONS_JSON }}
+          ATS_SKILLS_JSON: ${{ secrets.ATS_SKILLS_JSON }}
+        run: |
+          mkdir -p data
+          printf '%s\n' "$EXPERIENCE_JSON" > data/experience.json
+          printf '%s\n' "$ACHIEVEMENTS_JSON" > data/achievements.json
+          printf '%s\n' "$CP_PROFILE_JSON" > data/cp-profile.json
+          printf '%s\n' "$PROJECTS_JSON" > data/projects.json
+          printf '%s\n' "$SECTIONS_JSON" > data/sections.json
+          # ATS skills: use the secret if set, else fall back to the committed example.
+          if [ -n "$ATS_SKILLS_JSON" ]; then
+            printf '%s\n' "$ATS_SKILLS_JSON" > data/ats-skills.json
+          else
+            echo "::warning title=ATS_SKILLS_JSON unset::falling back to data/ats-skills.example.json"
+            cp data/ats-skills.example.json data/ats-skills.json
+          fi
+
+      - name: Validate JSON data files
+        run: |
+          bad=0
+          for f in data/experience.json data/achievements.json data/cp-profile.json data/projects.json data/sections.json data/ats-skills.json; do
+            if [ ! -s "$f" ]; then
+              echo "::error file=$f::file is empty — the corresponding secret may be unset"
+              bad=1
+              continue
+            fi
+            if ! node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>/dev/null; then
+              echo "::error file=$f::invalid JSON — fix the secret value"
+              echo "  first 200 chars of file:"
+              head -c 200 "$f" | sed 's/^/  /'
+              echo ""
+              bad=1
+            fi
+          done
+          [ "$bad" = "0" ] || exit 1
+
+      - name: Build
+        run: npx next build 2>&1 | tee build.log
+        # If this step fails, the previous validation passed but Next.js still
+        # rejected something. Common causes: type errors, import-time exception
+        # in a server component, or a fetch in github.ts / cp-platforms.ts
+        # throwing during prerender. Inspect build.log above the error frame.
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
