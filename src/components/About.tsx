@@ -47,21 +47,21 @@ export default function About({ cfg }: { cfg: ResolvedSection }) {
             animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
             transition={{ delay: 0.15, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            Software developer, <span className="accent">{xpYears} years</span> in. I write code that has to survive production traffic, junior engineers, and my own future self.
+            I&apos;m an I.T. Analyst at Tata Consultancy Services with <span className="accent">{xpYears} years</span> of experience building GenAI and LLM-powered business solutions. Before TCS, I spent 3.5 years at Ericsson, growing through 3 roles — from Software Engineer Intern to Software Engineer to Data Engineer — where I built a strong foundation in software and data engineering. That experience now fuels my current focus: designing and building intelligent, <span className="accent">AI-first products</span> powered by Generative AI and Large Language Models (LLM).
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
             animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
             transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            I work across the stack — from <span className="accent">low-level systems</span> to <span className="accent">pixel-perfect interfaces</span> — and I care about the small details: cold-start times, error budgets, and the way a button feels under your finger.
+            I hold a B.Tech in Information Technology from Jalpaiguri Government Engineering College, and I actively work with <span className="accent">prompt engineering</span>, <span className="accent">LLM application design</span>, and product management to bring GenAI solutions from concept to impact. My credentials include the Generative AI Driver&apos;s License and 3+ certifications spanning AI architecture and cloud/data workshops — reflecting my deep commitment to staying at the forefront of this fast-evolving field.
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
             animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
             transition={{ delay: 0.55, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            Currently obsessed with developer tooling, real-time systems, and making the boring parts of software <span className="accent">delightful</span>.
+            I speak 3 languages — English, Bengali, and Hindi — and I&apos;ve co-authored 1 published paper on defect tolerance in nanocrossbar arrays. Based in Kolkata, India, I&apos;m passionate about turning complex challenges into <span className="accent">elegant, AI-driven solutions</span>, and I&apos;m always excited to connect, collaborate, and build the next generation of intelligent products.
           </motion.p>
           <motion.div
             className="signature"
@@ -69,7 +69,7 @@ export default function About({ cfg }: { cfg: ResolvedSection }) {
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.75, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            — signed, // last_pushed: 2 hours ago
+            — signed, Aarjesh
           </motion.div>
         </div>
         <motion.div

@@ -31,12 +31,11 @@ jobs:
           ENV_LOCAL: ${{ secrets.ENV_LOCAL }}
           EXPERIENCE_JSON: ${{ secrets.EXPERIENCE_JSON }}
           ACHIEVEMENTS_JSON: ${{ secrets.ACHIEVEMENTS_JSON }}
-          CP_PROFILE_JSON: ${{ secrets.CP_PROFILE_JSON }}
           PROJECTS_JSON: ${{ secrets.PROJECTS_JSON }}
           SECTIONS_JSON: ${{ secrets.SECTIONS_JSON }}
         run: |
           missing=0
-          for v in ENV_LOCAL EXPERIENCE_JSON ACHIEVEMENTS_JSON CP_PROFILE_JSON PROJECTS_JSON SECTIONS_JSON; do
+          for v in ENV_LOCAL EXPERIENCE_JSON ACHIEVEMENTS_JSON PROJECTS_JSON SECTIONS_JSON; do
             if [ -z "${!v}" ]; then
               echo "::error title=Missing secret::repo secret '$v' is unset or empty — set it under Settings → Secrets and variables → Actions"
               missing=1
@@ -53,17 +52,25 @@ jobs:
         env:
           EXPERIENCE_JSON: ${{ secrets.EXPERIENCE_JSON }}
           ACHIEVEMENTS_JSON: ${{ secrets.ACHIEVEMENTS_JSON }}
-          CP_PROFILE_JSON: ${{ secrets.CP_PROFILE_JSON }}
           PROJECTS_JSON: ${{ secrets.PROJECTS_JSON }}
           SECTIONS_JSON: ${{ secrets.SECTIONS_JSON }}
+          CP_PROFILE_JSON: ${{ secrets.CP_PROFILE_JSON }}
           ATS_SKILLS_JSON: ${{ secrets.ATS_SKILLS_JSON }}
         run: |
           mkdir -p data
           printf '%s\n' "$EXPERIENCE_JSON" > data/experience.json
           printf '%s\n' "$ACHIEVEMENTS_JSON" > data/achievements.json
-          printf '%s\n' "$CP_PROFILE_JSON" > data/cp-profile.json
           printf '%s\n' "$PROJECTS_JSON" > data/projects.json
           printf '%s\n' "$SECTIONS_JSON" > data/sections.json
+          # CP profile: use the secret if set, else fall back to the committed example
+          # (page.tsx reads this file unconditionally even when the "profile" section
+          # is disabled in sections.json).
+          if [ -n "$CP_PROFILE_JSON" ]; then
+            printf '%s\n' "$CP_PROFILE_JSON" > data/cp-profile.json
+          else
+            echo "::warning title=CP_PROFILE_JSON unset::falling back to data/cp-profile.example.json"
+            cp data/cp-profile.example.json data/cp-profile.json
+          fi
           # ATS skills: use the secret if set, else fall back to the committed example.
           if [ -n "$ATS_SKILLS_JSON" ]; then
             printf '%s\n' "$ATS_SKILLS_JSON" > data/ats-skills.json
